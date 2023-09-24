@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- WARNING: Eclipse auto-generated file.
+              Any modifications will be overwritten.
+              To include a user specific buildfile here, simply create one in the same
+              directory with the processing instruction <?eclipse.ant.import?>
+              as the first entry and export the buildfile again. -->
+
+<project basedir="." default="all" name="practica3-grupo6">
+	<!-- Condiciones para el tratamiento de OS -->
+	
+	<condition property="isWindows">
+		<os family="windows" />
+	</condition>
+	
+	<condition property="isUnix">
+		<os family="unix" />
+	</condition>
+	
+	<property environment="env" />
+	<property name="debuglevel" value="source,lines,vars" />
+	<property name="target" value="1.7" />
+	<property name="source" value="1.7" />
+	<path id="Maven Dependencies.libraryclasspath">
+		<pathelement location="../../../.m2/repository/junit/junit/5.8.1/junit-5.8.1.jar" />
+		<pathelement location="../../../.m2/repository/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar" />
+	</path>
+	
+	<path id="practica3-grupo6.classpath">
+		<pathelement location="target/classes" />
+		<pathelement location="target/test-classes" />
+		<path refid="Maven Dependencies.libraryclasspath" />
+	</path>
+	
+	<target name="limpiar">
+		<delete dir="${build}" />
+		<delete dir="${doc}" />
+		<delete dir="${junit}">
+		</delete>
+	</target>
+	
+	<target name="compilar" depends="limpiar">
+		<mkdir dir="${build}" />
+		<copy todir="${build}">
+			<fileset dir="${src}" excludes="**/*.java" />
+		</copy>
+		<javac srcdir="${src}" destdir="${build}" debug="on" source="${source}" target="${target}">
+			<classpath refid="practica3-grupo6.classpath" />
+		</javac>
+	</target>
+	
+	<target name="documentar" depends="limpiar">
+		<mkdir dir="${doc}" />
+		<javadoc packagenames="tds.hibernate.cartelera" sourcepath="${src}" destdir="${doc}">
+			<classpath refid="practica3-grupo6.classpath">
+			</classpath>
+		</javadoc>
+		
+	</target>
+	 	<target name="all" depends="compilar,documentar">
+	</target>
+	
+	<target name="ejecutarTest" depends="os-check, compilar" description="Ejecuta todos los tests">
+		<exec dir="." executable="${executable}">
+		<arg line="${arglineIni} mvn -Dtest=GpsTest,ReservaTest,GestorTest,AlojamientoTest test${arglineEnd}"/>
+		</exec>
+	</target>
+		
+	<target name="ejecutaCajaBlanca" depends="os-check, compilar" description="Se ejecutan las pruebas de caja blanca para aumentar la cobertura">
+		<exec dir="." executable="${executable}">
+		<arg line="${arglineIni} mvn test -Dgroups=TDD${arglineEnd}"/>
+	</exec>
+	</target>
+		
+	<target name="ejecutarTestEnAislamiento" depends="os-check, compilar" description="Ejecuta todos los tests de gestor basados en mocks">
+		<exec dir="." executable="${executable}">
+		<arg line="${arglineIni} mvn test -Dgroups=Isolation${arglineEnd}"/>
+	</exec>
+	</target>
+	
+	<target name="ejecutarTestSinAislamiento" depends="os-check, compilar" description="Pruebas sin aislamiento">
+		<exec dir="." executable="${executable}">
+		<arg line="${arglineIni} mvn -Dtest=GpsTest,ReservaTest,AlojamientoTest test${arglineEnd}"/>
+	</exec>
+	</target>
+	
+	<target name="obtenerInformeCobertura" depends="compilar, prepare-agent" description="Obtener los informes de cobertura, de rama, decisión/condición">
+		<exec dir="." executable="${executable}">
+		<arg line="${arglineIni} mvn -X -Djacoco.dataFile=${jacocoagent} -Djacoco.outputDirectory=./jacoco_ut org.jacoco:jacoco-maven-plugin:report${arglineEnd}"/>
+	</exec>
+	</target>
+	
+	<target name="prepare-agent">
+		<exec dir="." executable="${executable}">
+		<arg line="${arglineIni} mvn -Djacoco.destFile=${jacocoagent} clean org.jacoco:jacoco-maven-plugin:prepare-agent install -Pcoverage-per-test${arglineEnd}"/>
+	</exec>
+	</target>
+	
+	<target name="ejecutarSonarQube" depends="compilar" description="Obtener los informes de cobertura, de rama, decisión/condición">
+		<exec dir="." executable="${executable}">
+		<arg line="${arglineIni} clean verify sonar:sonar -Dsonar.projectKey=tds-practica3-grupo2 -Dsonar.host.url=http://localhost:9000 -Dsonar.login=a0486a154c189a496791924b2a0f7a1717abbb95 ${arglineEnd}"/>
+	</exec>
+	</target>
+	
+	<target name="os-check" depends="os-check-unix, os-check-win" description="Determina sistema operativo y asigna executable y argline" />
+
+	<target name="os-check-unix" if="isUnix">
+		<property name="executable" value="sh" />
+		<property name="arglineIni" value="-c '" />
+		<property name="arglineEnd" value="'" />
+	</target>
+	
+	<target name="os-check-win" if="isWindows">
+		<property name="executable" value="cmd" />
+		<property name="arglineIni" value="/c " />
+		<property name="arglineEnd" value="" />
+	</target>
+
+</project>
